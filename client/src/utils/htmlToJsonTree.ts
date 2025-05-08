@@ -49,4 +49,7 @@ export interface NodeTree {
   
     return tree
   }
-  
+  export function extractStyleBlocks(doc: Document): string[] {
+    const styleTags = Array.from(doc.querySelectorAll('style'))
+    return styleTags.map(tag => tag.textContent || '').filter(Boolean)
+  }

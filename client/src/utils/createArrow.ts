@@ -1,17 +1,21 @@
 import * as THREE from 'three'
 
-export function createArrowWithEffect(from: THREE.Vector3, to: THREE.Vector3): THREE.Group {
+export function createArrowWithEffect(
+  from: THREE.Vector3,
+  to: THREE.Vector3,
+  color: number = 0xffffff,
+  thickness: number = 0.05
+): THREE.Group {
   const group = new THREE.Group()
 
-  // Напрямок і довжина
   const direction = new THREE.Vector3().subVectors(to, from)
   const length = direction.length()
   const midPoint = new THREE.Vector3().addVectors(from, to).multiplyScalar(0.5)
 
   // Лінія
   const line = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.05, 0.05, length, 8),
-    new THREE.MeshBasicMaterial({ color: 0xffffff })
+    new THREE.CylinderGeometry(thickness, thickness, length, 8),
+    new THREE.MeshBasicMaterial({ color })
   )
   line.position.copy(midPoint)
   line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.clone().normalize())
@@ -19,17 +23,17 @@ export function createArrowWithEffect(from: THREE.Vector3, to: THREE.Vector3): T
 
   // Наконечник
   const cone = new THREE.Mesh(
-    new THREE.ConeGeometry(0.1, 0.3, 12),
-    new THREE.MeshBasicMaterial({ color: 0xffffff })
+    new THREE.ConeGeometry(thickness * 2, thickness * 4, 12),
+    new THREE.MeshBasicMaterial({ color })
   )
   cone.position.copy(to)
   cone.lookAt(from)
   group.add(cone)
 
-  // Анімована кулька
+  // Анімована кулька (ефект "пульсації")
   const pulse = new THREE.Mesh(
-    new THREE.SphereGeometry(0.07, 8, 8),
-    new THREE.MeshBasicMaterial({ color: 0xff6600 })
+    new THREE.SphereGeometry(thickness * 1.5, 8, 8),
+    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.7 })
   )
   group.add(pulse)
 

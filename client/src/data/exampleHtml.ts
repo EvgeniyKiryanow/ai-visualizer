@@ -1,6 +1,6 @@
 export const exampleHtml = `
 <html>
-  <body>
+  <body class="hero" id="main">
     <header>
       <h1>Welcome to the AI Visualizer</h1>
       <nav>
@@ -12,7 +12,7 @@ export const exampleHtml = `
       </nav>
     </header>
 
-    <main>
+    <main class="hero" id="main">
       <section>
         <h2>Introduction</h2>
         <p>This project visualizes HTML structure in 3D.</p>
@@ -30,4 +30,8 @@ export const exampleHtml = `
     </footer>
   </body>
 </html>
+<style>
+  .hero { color: red; }
+  #main { background: black; }
+</style>
 `

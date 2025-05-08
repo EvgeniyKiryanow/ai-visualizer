@@ -1,93 +1,147 @@
 <template>
   <div>
-    <!-- <h1>3D Tree Visualization</h1> -->
     <div ref="sceneContainer" class="scene-container" />
-    <!-- <div class="controls">
-      <button @click="rotateCamera(-10)">Rotate Left</button>
-      <button @click="rotateCamera(10)">Rotate Right</button>
-      <button @click="zoomIn">Zoom In</button>
-      <button @click="zoomOut">Zoom Out</button>
-      <button @click="moveUp">Move Up</button>
-      <button @click="moveDown">Move Down</button>
-      <button @click="moveLeft">Move Left</button>
-      <button @click="moveRight">Move Right</button>
-    </div> -->
   </div>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
-import * as THREE from 'three'
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import { parseHtmlToTree } from '../utils/htmlToJsonTree'
-import { renderHtmlTree } from "../utils/renderHtmlTree"
-import { ensureFullHtmlStructure } from '../utils/ensureFullHtmlStructure'
-import { exampleHtml } from '../data/exampleHtml'
+import { onMounted, ref } from "vue";
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-const sceneContainer = ref<HTMLDivElement | null>(null)
-let scene: THREE.Scene, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, controls: OrbitControls
+import { parseHtmlToTree, extractStyleBlocks } from "../utils/htmlToJsonTree";
+import { extractCssRules, CssRule } from "../utils/extractCssRules";
+import { renderHtmlTree } from "../utils/renderHtmlTree";
+import { ensureFullHtmlStructure } from "../utils/ensureFullHtmlStructure";
+import { createStylePanel } from "../utils/createStylePanel";
+import { createArrowWithEffect } from "../utils/createArrow";
+import { exampleHtml } from "../data/exampleHtml";
+import { NodeTree } from "../utils/htmlToJsonTree";
 
-onMounted(async () => {
-  // Сцена, камера, рендер
-  scene = new THREE.Scene()
-  camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000)
-  renderer = new THREE.WebGLRenderer({ antialias: true })
+// 🔄 Сцена, камера, рендер
+const sceneContainer = ref<HTMLDivElement | null>(null);
+let scene: THREE.Scene,
+  camera: THREE.PerspectiveCamera,
+  renderer: THREE.WebGLRenderer,
+  controls: OrbitControls;
 
-  if (!sceneContainer.value) return
-  renderer.setSize(window.innerWidth, window.innerHeight)
-  sceneContainer.value.appendChild(renderer.domElement)
+// 🔁 Обхід усіх вузлів дерева
+function walkTree(
+  node: NodeTree,
+  callback: (node: NodeTree, pos: THREE.Vector3) => void,
+  x = 0,
+  y = 0,
+  z = 0,
+  spacing = 4,
+  verticalGap = 4
+) {
+  callback(node, new THREE.Vector3(x, y, z));
 
-  // Фон, сітка, стіна
-  scene.background = new THREE.Color(0x101010)
-  const gridHelper = new THREE.GridHelper(200, 50)
-  gridHelper.position.set(0, 0, 0)
-  scene.add(gridHelper)
+  const totalWidth = node.children?.length || 0;
+  let offset = x - (totalWidth * spacing) / 2;
 
-  const wallGeometry = new THREE.BoxGeometry(200, 200, 10)
-  const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff, wireframe: true })
-  const wall = new THREE.Mesh(wallGeometry, wallMaterial)
-  wall.position.set(0, 100, -100)
-  scene.add(wall)
-
-  // Контрол
-  camera.position.set(0, 20, 100)
-  controls = new OrbitControls(camera, renderer.domElement)
-  controls.enableZoom = true
-  controls.enableRotate = true
-  controls.update()
-
-  // HTML дерево
-  // const html = '<div><p><div><p><div></div></p></div></p> <p></p> <p></p></div>'
-  const parsedTree = parseHtmlToTree(exampleHtml)
-const fullTree = ensureFullHtmlStructure(parsedTree)
-
-  // Додати всі кореневі елементи дерева
-for (let i = 0; i < fullTree.length; i++) {
-  const rootNode = fullTree[i]
-  await renderHtmlTree(rootNode, scene, i * 5, 1, 0)
+  for (const child of node.children || []) {
+    const childX = offset + spacing / 2;
+    const childY = y + verticalGap;
+    walkTree(child, callback, childX, childY, z);
+    offset += spacing;
+  }
 }
 
-  // Анімація
-  const animate = () => {
-    requestAnimationFrame(animate)
-    controls.update()
-    renderer.render(scene, camera)
+// 🔍 Порівняння селектора з вузлом
+function doesSelectorMatch(node: NodeTree, selector: string): boolean {
+  if (selector.startsWith(".")) {
+    return (
+      node.attributes?.class?.split(" ").includes(selector.slice(1)) ?? false
+    );
+  }
+  if (selector.startsWith("#")) {
+    return node.attributes?.id === selector.slice(1);
+  }
+  return node.tag === selector;
+}
+
+// 📦 onMounted
+onMounted(async () => {
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(
+    45,
+    window.innerWidth / window.innerHeight,
+    1,
+    10000
+  );
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+
+  if (!sceneContainer.value) return;
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  sceneContainer.value.appendChild(renderer.domElement);
+
+  scene.background = new THREE.Color(0x101010);
+
+  const gridHelper = new THREE.GridHelper(200, 50);
+  gridHelper.position.set(0, 0, 0);
+  scene.add(gridHelper);
+
+  const wallGeometry = new THREE.BoxGeometry(200, 200, 10);
+  const wallMaterial = new THREE.MeshBasicMaterial({
+    color: 0x0000ff,
+    wireframe: true,
+  });
+  const wall = new THREE.Mesh(wallGeometry, wallMaterial);
+  wall.position.set(0, 100, -100);
+  scene.add(wall);
+
+  camera.position.set(0, 20, 100);
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableZoom = true;
+  controls.enableRotate = true;
+  controls.update();
+
+  // 🔎 Парсимо HTML + CSS
+  const doc = new DOMParser().parseFromString(exampleHtml, "text/html");
+  const parsedTree = parseHtmlToTree(exampleHtml);
+  const fullTree = ensureFullHtmlStructure(parsedTree);
+  const styleStrings = extractStyleBlocks(doc);
+  const allCssRules: CssRule[] = styleStrings.flatMap(extractCssRules);
+
+  // 🔁 Рендер HTML дерева
+  for (let i = 0; i < fullTree.length; i++) {
+    await renderHtmlTree(fullTree[i], scene, i * 5, 1, 0, 0, allCssRules);
   }
 
-  animate()
-})
+  // ✨ Рендер стилів і стрілок
+  // ✨ Рендер стилів і стрілок
+  allCssRules.forEach((rule, index) => {
+    const text = `${rule.selector} {\n  ${Object.entries(rule.declarations)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(";\n  ")}\n}`;
 
-// Кнопки управління камерою
-const rotateCamera = (angle: number) => {
-  camera.rotation.y += THREE.MathUtils.degToRad(angle)
-}
-const zoomIn = () => (camera.position.z -= 5)
-const zoomOut = () => (camera.position.z += 5)
-const moveUp = () => (camera.position.y += 5)
-const moveDown = () => (camera.position.y -= 5)
-const moveLeft = () => (camera.position.x -= 5)
-const moveRight = () => (camera.position.x += 5)
+    fullTree.forEach((root) => {
+      walkTree(root, (node, pos) => {
+        if (doesSelectorMatch(node, rule.selector)) {
+          const offset = new THREE.Vector3(0, 0, -2);
+          const panelPos = pos.clone().add(offset);
 
+          const panel = createStylePanel(text, panelPos);
+          scene.add(panel);
+
+          const targetPos = pos.clone().add(new THREE.Vector3(-3, 1, 0)) // Центр HTML-блоку
+          const arrow = createArrowWithEffect(panelPos, targetPos, 0x00ccff, 0.04)
+          scene.add(arrow);
+        }
+      });
+    });
+  });
+
+  // 🔄 Анімація
+  const animate = () => {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  };
+
+  animate();
+});
 </script>
 
 <style scoped>
@@ -97,19 +151,5 @@ const moveRight = () => (camera.position.x += 5)
   margin: 0;
   overflow: hidden;
   background-color: #f0f0f0;
-}
-
-.controls {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  z-index: 10;
-  background: white;
-  padding: 10px;
-  border-radius: 5px;
-}
-
-button {
-  margin: 5px;
 }
 </style>

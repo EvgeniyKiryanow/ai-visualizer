@@ -3,11 +3,23 @@ import { NodeTree } from './htmlToJsonTree'
 import { createArrowWithEffect } from './createArrow'
 import { getModelByTag } from '../models/getModelsByTag'
 import { createLabelMesh } from './threeLabel'
+import { CssRule } from '../utils/extractCssRules'
 
 function getSubtreeWidth(node: NodeTree): number {
   if (!node.children || node.children.length === 0) return 1
   return node.children.reduce((sum, child) => sum + getSubtreeWidth(child), 0)
 }
+
+function doesSelectorMatch(node: NodeTree, selector: string): boolean {
+  if (selector.startsWith('.')) {
+    return node.attributes?.class?.split(/\s+/).includes(selector.slice(1)) ?? false
+  }
+  if (selector.startsWith('#')) {
+    return node.attributes?.id === selector.slice(1)
+  }
+  return node.tag === selector // селектор по тегу
+}
+
 
 export async function renderHtmlTree(
   node: NodeTree,
@@ -15,10 +27,11 @@ export async function renderHtmlTree(
   x: number,
   y: number,
   z: number,
-  level: number = 0
+  level: number = 0,
+  cssRules: CssRule[] = []
 ): Promise<void> {
   if (node.tag === '#text') return
-
+  const matchedRules = cssRules.filter(rule => doesSelectorMatch(node, rule.selector))
   const model = await getModelByTag(node.tag)
   if (model) {
     model.position.set(x, y, z)
@@ -40,11 +53,18 @@ export async function renderHtmlTree(
       const labelText = labelTexts.join(' | ')
       if (labelText) {
         const attrLabel = createLabelMesh(labelText)
-        attrLabel.position.set(x, y - 1.2, z + 1.8)
+        attrLabel.position.set(x, y - 1.2, z)
         scene.add(attrLabel)
       }
     }
-
+    if (matchedRules.length > 0) {
+      const label = createLabelMesh(
+        matchedRules.map(r => r.selector).join(', '),
+        200
+      )
+      label.position.set(x, y + 2.5, z + 1)
+      scene.add(label)
+    }
     const spacing = 4
     const verticalGap = 4
 
@@ -56,7 +76,7 @@ export async function renderHtmlTree(
       if (head) {
         const headX = x - 6
         const headY = y + verticalGap
-        const arrow = createArrowWithEffect(new THREE.Vector3(x, y, z), new THREE.Vector3(headX, headY, z))
+        const arrow = createArrowWithEffect(new THREE.Vector3(x, y, z), new THREE.Vector3(headX, headY, z), 0xff6600,)
         scene.add(arrow)
         await renderHtmlTree(head, scene, headX, headY, z, level + 1)
       }
@@ -64,7 +84,7 @@ export async function renderHtmlTree(
       if (body) {
         const bodyX = x + 6
         const bodyY = y + verticalGap
-        const arrow = createArrowWithEffect(new THREE.Vector3(x, y, z), new THREE.Vector3(bodyX, bodyY, z))
+        const arrow = createArrowWithEffect(new THREE.Vector3(x, y, z), new THREE.Vector3(bodyX, bodyY, z), 0xff6600,)
         scene.add(arrow)
         await renderHtmlTree(body, scene, bodyX, bodyY, z, level + 1)
       }
@@ -86,7 +106,8 @@ export async function renderHtmlTree(
 
       const arrow = createArrowWithEffect(
         new THREE.Vector3(x, y, z),
-        new THREE.Vector3(childX, childY, childZ)
+        new THREE.Vector3(childX, childY, childZ),
+        0xff6600,
       )
       scene.add(arrow)
 
@@ -103,3 +124,4 @@ export async function renderHtmlTree(
     scene.add(levelLabel)
   }
 }
+
