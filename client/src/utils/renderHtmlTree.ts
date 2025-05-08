@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { NodeTree } from './htmlToJsonTree'
+import { createArrowWithEffect } from './createArrow'
 import { getModelByTag } from '../models/getModelsByTag'
 
 export async function renderHtmlTree(
@@ -19,27 +20,25 @@ export async function renderHtmlTree(
     model.position.set(x, y, z)
     scene.add(model)
 
-    if (level > 0) {
-      const lineGeometry = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(x, y + 2, z),
-        new THREE.Vector3(x, y, z),
-      ])
-      const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff })
-      const line = new THREE.Line(lineGeometry, lineMaterial)
-      scene.add(line)
-    }
-
     const spacing = 3
+
     for (let i = 0; i < node.children.length; i++) {
       const child = node.children[i]
-      await renderHtmlTree(
-        child,
-        scene,
-        x + i * spacing - (spacing * (node.children.length - 1)) / 2,
-        y + 3,
-        z,
-        level + 1
+
+      // Обчислюємо позицію дитини
+      const childX = x + i * spacing - (spacing * (node.children.length - 1)) / 2
+      const childY = y + 3
+      const childZ = z
+
+      // Додаємо стрілку між батьком і дитиною
+      const arrow = createArrowWithEffect(
+        new THREE.Vector3(x, y + 1, z),
+        new THREE.Vector3(childX, childY, childZ)
       )
+      scene.add(arrow)
+
+      // Рекурсивно додаємо дитину
+      await renderHtmlTree(child, scene, childX, childY, childZ, level + 1)
     }
   }
 }

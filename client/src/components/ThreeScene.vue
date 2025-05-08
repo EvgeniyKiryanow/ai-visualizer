@@ -21,7 +21,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { parseHtmlToTree } from '../utils/htmlToJsonTree'
 import { renderHtmlTree } from "../utils/renderHtmlTree"
-import { getModelByTag } from '../models/getModelsByTag'
+import { ensureFullHtmlStructure } from '../utils/ensureFullHtmlStructure'
 
 const sceneContainer = ref<HTMLDivElement | null>(null)
 let scene: THREE.Scene, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, controls: OrbitControls
@@ -56,12 +56,13 @@ onMounted(async () => {
   controls.update()
 
   // HTML дерево
-  const html = '<div><p>Hello</p><h1>dd</h1></div>'
-  const tree = parseHtmlToTree(html)
+  const html = '<div><p></p></div>'
+  const parsedTree = parseHtmlToTree(html)
+const fullTree = ensureFullHtmlStructure(parsedTree)
 
   // Додати всі кореневі елементи дерева
-for (let i = 0; i < tree.length; i++) {
-  const rootNode = tree[i]
+for (let i = 0; i < fullTree.length; i++) {
+  const rootNode = fullTree[i]
   await renderHtmlTree(rootNode, scene, i * 5, 1, 0)
 }
 

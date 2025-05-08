@@ -2,7 +2,7 @@ import { Object3D } from 'three'
 
 export async function getModelByTag(tag: string): Promise<Object3D | null> {
   const normalizedTag = tag.toLowerCase()
-  const fileName = normalizedTag + '.js'
+  const fileName = normalizedTag + '.ts'
   console.log('🧩 getModelByTag:', fileName)
 
   try {
