@@ -1,5 +1,6 @@
 <template>
   <div>
+    <NavigationPanel />
     <div ref="sceneContainer" class="scene-container" />
   </div>
 </template>
@@ -17,6 +18,9 @@ import { ensureFullHtmlStructure } from '../utils/html/ensureFullHtmlStructure'
 import { renderHtmlTree } from '../utils/html/renderHtmlTree'
 import { createStylePanel } from '../utils/css/createStylePanel'
 import { createArrowWithEffect } from '../utils/arrowd/createArrow'
+import NavigationPanel from '../components/NavigationPanel.vue'
+import { activeView } from '../store/uiState'
+
 
 // === GLOBALS ===
 const sceneContainer = ref<HTMLDivElement | null>(null)
@@ -38,9 +42,13 @@ onMounted(async () => {
   fullTree.forEach(root => walkTree(root, nodePositionMap))
 
   // 🧱 Візуалізація дерева
+  // TODO: update this logic and add for cs
+  console.log(activeView, 'activeView')
+  if (activeView.value === 'html') {
   for (let i = 0; i < fullTree.length; i++) {
     await renderHtmlTree(fullTree[i], scene, i * 5, 1, 0, 0, allCssRules)
   }
+}
 
   // 🎯 Рендер CSS блоків і стрілок
   for (const rule of allCssRules) {
