@@ -1,8 +1,8 @@
 <template>
   <div>
-    <h1>3D Tree Visualization</h1>
+    <!-- <h1>3D Tree Visualization</h1> -->
     <div ref="sceneContainer" class="scene-container" />
-    <div class="controls">
+    <!-- <div class="controls">
       <button @click="rotateCamera(-10)">Rotate Left</button>
       <button @click="rotateCamera(10)">Rotate Right</button>
       <button @click="zoomIn">Zoom In</button>
@@ -11,7 +11,7 @@
       <button @click="moveDown">Move Down</button>
       <button @click="moveLeft">Move Left</button>
       <button @click="moveRight">Move Right</button>
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -22,6 +22,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { parseHtmlToTree } from '../utils/htmlToJsonTree'
 import { renderHtmlTree } from "../utils/renderHtmlTree"
 import { ensureFullHtmlStructure } from '../utils/ensureFullHtmlStructure'
+import { exampleHtml } from '../data/exampleHtml'
 
 const sceneContainer = ref<HTMLDivElement | null>(null)
 let scene: THREE.Scene, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, controls: OrbitControls
@@ -56,8 +57,8 @@ onMounted(async () => {
   controls.update()
 
   // HTML дерево
-  const html = '<div><p></p> <p></p> <p></p></div>'
-  const parsedTree = parseHtmlToTree(html)
+  // const html = '<div><p><div><p><div></div></p></div></p> <p></p> <p></p></div>'
+  const parsedTree = parseHtmlToTree(exampleHtml)
 const fullTree = ensureFullHtmlStructure(parsedTree)
 
   // Додати всі кореневі елементи дерева
