@@ -56,7 +56,7 @@ onMounted(async () => {
   controls.update()
 
   // HTML дерево
-  const html = '<div><p></p></div>'
+  const html = '<div><p></p> <p></p> <p></p></div>'
   const parsedTree = parseHtmlToTree(html)
 const fullTree = ensureFullHtmlStructure(parsedTree)
 
