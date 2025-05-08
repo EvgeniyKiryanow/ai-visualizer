@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {  createLabelMesh } from '../../utils/threeLabel'
+import {  createLabelMesh } from '../../utils/labels/threeLabel'
 
 export function createDivModel() {
   const geometry = new THREE.BoxGeometry(1, 1, 1);

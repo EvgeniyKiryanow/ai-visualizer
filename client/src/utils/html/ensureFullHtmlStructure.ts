@@ -1,4 +1,4 @@
-import { NodeTree } from './htmlToJsonTree'
+import { NodeTree } from './html/htmlToJsonTree'
 
 export function ensureFullHtmlStructure(tree: NodeTree[]): NodeTree[] {
   const hasHtml = tree.some(node => node.tag === 'html')

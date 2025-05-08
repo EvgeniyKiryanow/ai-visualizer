@@ -1,25 +1,25 @@
 export const exampleHtml = `
 <html>
-  <body class="hero" id="main">
-    <header>
+  <body>
+    <header class="hero">
       <h1>Welcome to the AI Visualizer</h1>
-      <nav>
+      <nav class="test">
         <ul>
-          <li><a href="#">Home</a></li>
+          <li class="test"><a href="#">Home</a></li>
           <li><a href="#">Docs</a></li>
           <li><a href="#">Contact</a></li>
         </ul>
       </nav>
     </header>
 
-    <main class="hero" id="main">
+    <main>
       <section>
         <h2>Introduction</h2>
         <p>This project visualizes HTML structure in 3D.</p>
         <div>
           <p>Nested inside div.</p>
           <div>
-            <p> nested paragraph</p>
+            <p class="test"> nested paragraph</p>
           </div>
         </div>
       </section>
@@ -33,5 +33,6 @@ export const exampleHtml = `
 <style>
   .hero { color: red; }
   #main { background: black; }
+  .test {color: black;}
 </style>
 `

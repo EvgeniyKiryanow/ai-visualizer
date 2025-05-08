@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {  createLabelMesh } from '../../utils/threeLabel' 
+import {  createLabelMesh } from '../../utils/labels/threeLabel' 
 
 export function createLiModel() {
   const geometry = new THREE.SphereGeometry(1, 1, 1);
